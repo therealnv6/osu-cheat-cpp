@@ -15,10 +15,11 @@ Action::Action()
 Action::Action(HitObject* hitObject, char key, bool pressed)
 {
     this->time = hitObject->getTime();
-    
+    this->duration = -1;
+
     if (hitObject->getType() == HitObjectType::Spinner)
     {
-        this->duration = dynamic_cast<SpinnerHitObject*>(hitObject)->getEndTime();
+        this->duration = dynamic_cast<SpinnerHitObject*>(hitObject)->getEndTime() - hitObject->getTime();
     }
 
     if(!pressed)
@@ -30,6 +31,25 @@ Action::Action(HitObject* hitObject, char key, bool pressed)
         {
             this->time += this->duration;
         }
+    }
+
+    this->key = key;
+    this->setInput(pressed);
+}
+
+Action::Action(double sliderMultiplier, double beatLength, TimingPoint* timingPoint, HitObject* hitObject, char key, bool pressed)
+{
+    printf("%i, %i\n", this->duration, beatLength);
+
+    SliderHitObject* sliderObject = (SliderHitObject*) hitObject;
+
+    this->time = hitObject->getTime();
+    this->duration = (sliderObject->getSliderLength() / (sliderMultiplier * 100) * (beatLength * (timingPoint->isInherited() ? 1.0 : std::abs(timingPoint->getBeatLength()) / 100))) * sliderObject->getSlides();
+
+
+    if (!pressed)
+    {
+        this->time += this->duration;
     }
 
     this->key = key;
@@ -83,21 +103,18 @@ std::map<std::string, funcPtr> beatmapInitializers = {
 
 double getCorrectBeatLength(std::vector<TimingPoint>* timingPoints, TimingPoint* currentTimingPoint, std::vector<HitObject> hitObjects)
 {
-    double beatLength = 0;
+    double beatLength = currentTimingPoint->getBeatLength();
 
     for (auto point : *timingPoints)
     {
+        std::cout << point.getBeatLength() << std::endl;
+
         if (hitObjects[0].getTime() == currentTimingPoint->getTime())
         {
             break;
         }
 
         currentTimingPoint = &point;
-
-        if (currentTimingPoint->isInherited())
-        {
-            beatLength = currentTimingPoint->getBeatLength();
-        }
     }
 
     return beatLength;
@@ -176,6 +193,8 @@ Beatmap parseMap(std::string path)
 
     TimingPoint* currentTimingPoint = &*timingPoints.begin();
 
+    std::cout << currentTimingPoint->getBeatLength() << std::endl;
+
     double beatLength = timingPoints.begin()->getBeatLength();
     char key = PRIMARY_KEY;
 
@@ -192,20 +211,19 @@ Beatmap parseMap(std::string path)
             beatLength = currentTimingPoint->getBeatLength();
         }
 
-        if (object.getType() == HitObjectType::Circle)
+        if (object.getType() == HitObjectType::Circle || object.getType() == HitObjectType::Spinner)
         {
             actions.push_back(Action(&object, key, true));
-        } else if(object.getType() == HitObjectType::Slider)
+            actions.push_back(Action(&object, key, false));
+        } else if (object.getType() == HitObjectType::Slider)
         {
-            // todo: slider actions
-        } else if(object.getType() == HitObjectType::Spinner)
-        {
-            actions.push_back(Action(&object, PRIMARY_KEY, true));
+            actions.push_back(Action(sliderMultiplier, beatLength, currentTimingPoint, &object, key, true));
+            actions.push_back(Action(sliderMultiplier, beatLength, currentTimingPoint, &object, key, false));
         }
 
-        if (lastTime - object.getTime() <= 70)
+        if (lastTime - object.getTime() <= 70 || object.getType() == HitObjectType::Slider)
         {
-            if(key == PRIMARY_KEY)
+            if (key == PRIMARY_KEY)
             {
                 key = SECONDARY_KEY;
             }
@@ -213,6 +231,10 @@ Beatmap parseMap(std::string path)
             {
                 key = PRIMARY_KEY;
             }
+        }
+        else
+        {
+            key = PRIMARY_KEY;
         }
 
         lastTime = object.getTime();

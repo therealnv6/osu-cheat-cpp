@@ -14,6 +14,8 @@
 #define SECONDARY_KEY 'x'
 
 class HitObject;
+class SliderHitObject;
+class TimingPoint;
 class Beatmap;
 
 class Action
@@ -27,6 +29,7 @@ class Action
     public:
         Action();
         Action(HitObject* hitObject, char key, bool pressed);
+        Action(double sliderMultiplier, double beatLength, TimingPoint* timingPoint, HitObject* hitObject, char key, bool pressed);
 
         int getTime()
         {

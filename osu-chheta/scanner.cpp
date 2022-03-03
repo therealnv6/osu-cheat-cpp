@@ -53,7 +53,7 @@ char* scanExtern(char* pattern, char* mask, HANDLE hProc, char* begin, char* end
             return nullptr;
         }
 
-        std::cout << "Region size: " << mbi.RegionSize << std::endl;
+        //std::cout << "Region size: " << mbi.RegionSize << std::endl;
         
         char* buffer = new char[mbi.RegionSize];
         
@@ -153,7 +153,7 @@ HANDLE GetProcessHandle(const wchar_t* processName)
                 }
                 else
                 {
-                    std::wcout << "Skip: " << entry.szExeFile << std::endl;
+                    //std::wcout << "Skip: " << entry.szExeFile << std::endl;
                 }
             }
         }

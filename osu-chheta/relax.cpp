@@ -12,6 +12,22 @@ template <typename T> T readMemory(char* section, HANDLE process)
     return value;
 }
 
+void sendInput(char key, boolean up)
+{
+    INPUT input;
+
+    input.type = INPUT_KEYBOARD;
+    input.ki.wScan = 0;
+    input.ki.time = 0;
+    input.ki.dwExtraInfo = 0;
+
+    input.ki.wVk = VkKeyScan(key);
+    input.ki.dwFlags = up;
+
+    SendInput(1, &input, sizeof(INPUT));
+
+}
+
 void startRelax(Beatmap map, HANDLE process)
 {
     printf("\nOverall Difficulty: %f", map.getOverallDifficulty());
@@ -22,35 +38,43 @@ void startRelax(Beatmap map, HANDLE process)
     std::vector<Action> actions = map.getActions();
 
     auto action = actions.begin();
-    int time = -1;
+    auto end = actions[actions.size() - 1];
 
     char sig[7] = { 0x7E, 0x55, 0x8B, 0x76, 0x10, 0xDB, 0x05, };
     char mask[7] = { 'x', 'x', 'x', 'x', 'x', 'x', 'x', };
 
-    //uint32_t timeSignature = (uint32_t)scanExtern(sig, mask, process);
-    //uint32_t timeAddress = readMemory<uint32_t>((char*)timeSignature + 0x07, process);
+    u8* timeAddressAddress = ScanMemory(process, (u8*)sig, 0x07);
 
-    u8* timeAddress = ScanMemory(process, (u8*)sig, 0x07);
+    char buffer[0x10];
+    size_t bytesRead = 0;
+
+    ReadProcessMemory(process, timeAddressAddress + 0x07, buffer, sizeof(u32), &bytesRead);
+
+    u8* timeAddress = (u8*)(*(u32*)buffer);
 
     while (!GetAsyncKeyState(VK_RETURN)) 
     {
         Sleep(100);
     }
 
-    //std::cout << std::hex << "Time address: " << timeAddress << std::endl;
-
     while (action != actions.end())
     {
-        time = readMemory<int>((char*)timeAddress, process);
+        ReadProcessMemory(process, timeAddress, buffer, sizeof(u32), &bytesRead);
 
-        std::cout << time << " " << timeAddress << std::endl;
+        u32 currentTime = *(u32*)buffer;
 
-        if (time >= action->getTime() + 4)
+        if (currentTime < end.getTime())
         {
-            INPUT input = action->getInput();
+            if (currentTime >= action->getTime())
+            {
+                INPUT input = action->getInput();
 
-            SendInput(1, &input, sizeof(INPUT));
-            action++;
+                SendInput(1, &input, sizeof(INPUT));
+
+                printf("%i", action->getDuration());
+
+                action++;
+            }
         }
     }
 }

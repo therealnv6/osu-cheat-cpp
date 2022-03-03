@@ -57,6 +57,18 @@ class SliderHitObject : public HitObject
     double sliderLength;
 
     public:
+        SliderHitObject()
+        {
+            this->x = -1;
+            this->y = -1;
+            this->time = -1;
+
+            this->type = HitObjectType::Slider;
+
+            this->slides = -1;
+            this->sliderLength = -1;
+        }
+
         SliderHitObject(int x, int y, int time, int slides, double sliderLength)
         {
             this->x = x;

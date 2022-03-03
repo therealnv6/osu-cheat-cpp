@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     {
         std::cout << "Found osu process: " << process << " / " << INVALID_HANDLE_VALUE << std::endl;
 
-        std::string map = "C:/temp/GALNEYRUS - RAISE MY SWORD (TV Size) (Orofil) [FOUR DIMENSIONS].osu";
+        std::string map = "C:/Users/Patrick/AppData/Local/osu!/Songs/1341551 Memme - Plasma Gun/Memme - Plasma Gun (emu1337) [Extra].osu";
         Beatmap beatmap = parseMap(map);
 
         startRelax(beatmap, process);
