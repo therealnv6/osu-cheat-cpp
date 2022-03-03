@@ -1,6 +1,6 @@
 #include "relax.hpp"
 #include "signature.h"
-//
+
 //const char* sig = TIME_SIGNATURE->getPattern().c_str();
 //const char* mask = "xxxxxxx";
 
@@ -30,7 +30,8 @@ void startRelax(Beatmap map, HANDLE process)
     uint32_t timeSignature = (uint32_t)scanExtern(sig, mask, process);
     uint32_t timeAddress = readMemory<uint32_t>((char*)timeSignature + 0x07, process);
 
-    while (!GetAsyncKeyState(VK_RETURN)) {
+    while (!GetAsyncKeyState(VK_RETURN)) 
+    {
         Sleep(100);
     }
 
