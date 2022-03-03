@@ -31,6 +31,7 @@ void startRelax(Beatmap map, HANDLE process)
     //uint32_t timeAddress = readMemory<uint32_t>((char*)timeSignature + 0x07, process);
 
     u8* timeAddress = ScanMemory(process, (u8*)sig, 0x07);
+    timeAddress += 0x07;
 
     while (!GetAsyncKeyState(VK_RETURN)) 
     {
@@ -41,9 +42,19 @@ void startRelax(Beatmap map, HANDLE process)
 
     while (action != actions.end())
     {
-        time = readMemory<int>((char*)timeAddress, process);
+        
+        char buffer[0x10];
+        size_t bytesRead = 0;
+        
+        ReadProcessMemory(process, timeAddress, buffer, sizeof(u32), &bytesRead);
 
-        std::cout << time << " " << timeAddress << std::endl;
+        u32 currentTime = *(u32*)buffer;
+
+        std::cout << "Current time: " << currentTime << std::endl;
+        
+        //time = readMemory<int>((char*)timeAddress, process);
+
+        //std::cout << time << " " << timeAddress << std::endl;
 
         if (time >= action->getTime() + 4)
         {
