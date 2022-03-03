@@ -30,8 +30,16 @@ void startRelax(Beatmap map, HANDLE process)
     //uint32_t timeSignature = (uint32_t)scanExtern(sig, mask, process);
     //uint32_t timeAddress = readMemory<uint32_t>((char*)timeSignature + 0x07, process);
 
-    u8* timeAddress = ScanMemory(process, (u8*)sig, 0x07);
-    timeAddress += 0x07;
+    u8* timeAddressAddress = ScanMemory(process, (u8*)sig, 0x07); 
+
+    char buffer[0x10];
+    size_t bytesRead = 0;
+        
+    ReadProcessMemory(process, timeAddressAddress + 0x07, buffer, sizeof(u32), &bytesRead);
+    
+    u8* timeAddress = (u8*)(*(u32*)buffer);
+
+
 
     while (!GetAsyncKeyState(VK_RETURN)) 
     {
@@ -42,10 +50,6 @@ void startRelax(Beatmap map, HANDLE process)
 
     while (action != actions.end())
     {
-        
-        char buffer[0x10];
-        size_t bytesRead = 0;
-        
         ReadProcessMemory(process, timeAddress, buffer, sizeof(u32), &bytesRead);
 
         u32 currentTime = *(u32*)buffer;
