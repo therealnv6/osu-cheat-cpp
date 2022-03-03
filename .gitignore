@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+/osu-chheta/x64/Debug
+/.vs/osu-chheta/v17
+/x64/Debug
