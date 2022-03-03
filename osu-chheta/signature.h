@@ -16,8 +16,8 @@ class Signature
 
 		Signature(std::string pattern, int offset)
 		{
-			this->pattern = "";
-			this->offset = -1;
+			this->pattern = pattern;
+			this->offset = offset;
 		}
 
 		std::string getPattern()
@@ -31,6 +31,7 @@ class Signature
 		}
 };
 
+// found these values in osu-rx by duk88. feel free to check it out on github
 Signature* TIME_SIGNATURE = new Signature("7E 55 8B 76 10 DB 05", 0x7);
 Signature* MODE_SIGNATURE = new Signature("8D 45 BC 89 46 0C 83 3D", 0x8);
 Signature* PLAYER_SIGNATURE = new Signature("FF 50 0C 8B D8 8B 15", 0x7); //todo: use this for beatmap recognition 

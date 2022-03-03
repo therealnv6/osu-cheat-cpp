@@ -14,9 +14,9 @@ int main(int argc, char** argv)
 
     HANDLE process = getProcess(id);
 
-    if (process != nullptr)
+    if (process != INVALID_HANDLE_VALUE)
     {
-        std::cout << "Found osu process." << std::endl;
+        std::cout << "Found osu process." << process << std::endl;
 
         std::string map = "C:/Users/Patrick/AppData/Local/osu!/Songs/916290 GALNEYRUS - RAISE MY SWORD (TV Size)/GALNEYRUS - RAISE MY SWORD (TV Size) (Orofil) [FOUR DIMENSIONS].osu";
         Beatmap beatmap = parseMap(map);

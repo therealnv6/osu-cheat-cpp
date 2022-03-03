@@ -25,7 +25,7 @@ char* scanIntern(char* pattern, char* mask, char* begin, unsigned int size)
     return nullptr;
 }
 
-char* scanExtern(char* pattern, char* mask, HANDLE* hProc, char* begin, char* end)
+char* scanExtern(char* pattern, char* mask, HANDLE hProc, char* begin, char* end)
 {
     char* currentChunk = begin;
     char* match = nullptr;
@@ -38,6 +38,10 @@ char* scanExtern(char* pattern, char* mask, HANDLE* hProc, char* begin, char* en
         //return nullptr if VirtualQuery fails
         if (!VirtualQueryEx(hProc, currentChunk, &mbi, sizeof(mbi)))
         {
+            uint32_t error = GetLastError();
+            std::cout << "Error: " << error << std::endl;
+            std::cout << "Error!!!" << std::endl;
+
             return nullptr;
         }
 
@@ -67,6 +71,8 @@ char* scanExtern(char* pattern, char* mask, HANDLE* hProc, char* begin, char* en
         currentChunk = currentChunk + mbi.RegionSize;
         delete[] buffer;
     }
+
+
     return match;
 }
 
