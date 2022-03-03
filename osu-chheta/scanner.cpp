@@ -1,6 +1,12 @@
 #include "scanner.hpp"
+#include "utils.h"
 
 // found this on https://stackoverflow.com/questions/37277883/c-signature-scanner-in-console
+
+u32 FindPattern(char* module, char* patern, char* mask)
+{
+    return 0;
+}
 
 char* scanIntern(char* pattern, char* mask, char* begin, unsigned int size)
 {
@@ -31,6 +37,9 @@ char* scanExtern(char* pattern, char* mask, HANDLE hProc, char* begin, char* end
     char* match = nullptr;
     SIZE_T bytesRead;
 
+    Utils::Hexdump(pattern, 0x07);
+    Utils::Hexdump(mask, 0x07);
+
     while (currentChunk < end)
     {
         MEMORY_BASIC_INFORMATION mbi;
@@ -40,12 +49,14 @@ char* scanExtern(char* pattern, char* mask, HANDLE hProc, char* begin, char* end
         {
             uint32_t error = GetLastError();
             std::cout << "Error: " << error << std::endl;
-            std::cout << "Error!!!" << std::endl;
 
             return nullptr;
         }
 
+        std::cout << "Region size: " << mbi.RegionSize << std::endl;
+        
         char* buffer = new char[mbi.RegionSize];
+        
 
         if (mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS)
         {
@@ -76,24 +87,75 @@ char* scanExtern(char* pattern, char* mask, HANDLE hProc, char* begin, char* end
     return match;
 }
 
-HANDLE getProcess(const wchar_t* processName)
+u8* ScanMemory(HANDLE processHandle, u8* pattern, u32 patternSize)
+{
+    MEMORY_BASIC_INFORMATION mbi;
+
+    u8* address = 0;
+    
+    while (VirtualQueryEx(processHandle, address, &mbi, sizeof(mbi)))
+    {
+        if (mbi.State == MEM_COMMIT && mbi.State != PAGE_NOACCESS)
+        {
+            u8* buffer = (u8*)malloc(mbi.RegionSize);
+            if (buffer == NULL)
+                return NULL;
+
+            size_t bytesRead = 0;
+
+            if (ReadProcessMemory(processHandle, (LPCVOID)address, buffer, mbi.RegionSize, &bytesRead))
+            {
+                u32 scanSize = (bytesRead > 0 ? bytesRead : mbi.RegionSize);
+
+                for (u32 i = 0; i < scanSize; i++)
+                {
+                    if (!memcmp(buffer + i, pattern, patternSize))
+                    {
+                        
+                        std::cout << "Found match!" << std::endl;
+                        Utils::Hexdump(buffer + i, patternSize);
+                        free(buffer);
+                        return (address + i);
+                    }
+                }
+
+            }
+
+            free(buffer);
+        }
+
+        address += mbi.RegionSize;
+    }
+    
+    return NULL;
+}
+
+HANDLE GetProcessHandle(const wchar_t* processName)
 {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 
     if (snapshot != INVALID_HANDLE_VALUE)
     {
-        PROCESSENTRY32 entry = {};
+        PROCESSENTRY32 entry;
+
         entry.dwSize = sizeof PROCESSENTRY32;
 
         if (Process32First(snapshot, &entry))
         {
-            do
+            while (Process32Next(snapshot, &entry))
             {
                 if (_wcsicmp(entry.szExeFile, processName) == 0)
                 {
+                    std::wcout << "Found: " << entry.szExeFile << std::endl;
+                    
+                    CloseHandle(snapshot);
                     return OpenProcess(PROCESS_ALL_ACCESS, NULL, entry.th32ProcessID);
                 }
-            } while(Process32Next(snapshot, &entry));
+                else
+                {
+                    std::wcout << "Skip: " << entry.szExeFile << std::endl;
+                }
+            }
         }
     }
 }

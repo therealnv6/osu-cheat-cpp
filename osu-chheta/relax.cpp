@@ -27,21 +27,23 @@ void startRelax(Beatmap map, HANDLE process)
     char sig[7] = { 0x7E, 0x55, 0x8B, 0x76, 0x10, 0xDB, 0x05, };
     char mask[7] = { 'x', 'x', 'x', 'x', 'x', 'x', 'x', };
 
-    uint32_t timeSignature = (uint32_t)scanExtern(sig, mask, process);
-    uint32_t timeAddress = readMemory<uint32_t>((char*)timeSignature + 0x07, process);
+    //uint32_t timeSignature = (uint32_t)scanExtern(sig, mask, process);
+    //uint32_t timeAddress = readMemory<uint32_t>((char*)timeSignature + 0x07, process);
+
+    u8* timeAddress = ScanMemory(process, (u8*)sig, 0x07);
 
     while (!GetAsyncKeyState(VK_RETURN)) 
     {
         Sleep(100);
     }
 
-    std::cout << std::hex << "Time address: " << timeAddress << std::endl;
+    //std::cout << std::hex << "Time address: " << timeAddress << std::endl;
 
     while (action != actions.end())
     {
         time = readMemory<int>((char*)timeAddress, process);
 
-        std::cout << time + " " + timeAddress << std::endl;
+        std::cout << time << " " << timeAddress << std::endl;
 
         if (time >= action->getTime() + 4)
         {

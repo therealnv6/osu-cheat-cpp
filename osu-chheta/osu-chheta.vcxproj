@@ -26,9 +26,11 @@
     <ClCompile Include="relax.cpp" />
     <ClCompile Include="scanner.cpp" />
     <ClCompile Include="timingpoints.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="beatmap.h" />
+    <ClInclude Include="global.h" />
     <ClInclude Include="hitobject.hpp" />
     <ClInclude Include="mods.h" />
     <ClInclude Include="parser.hpp" />
@@ -37,6 +39,7 @@
     <ClInclude Include="signature.h" />
     <ClInclude Include="timingpoint.hpp" />
     <ClInclude Include="relax.hpp" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
