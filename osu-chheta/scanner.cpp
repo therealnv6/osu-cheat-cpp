@@ -98,8 +98,11 @@ u8* ScanMemory(HANDLE processHandle, u8* pattern, u32 patternSize)
         if (mbi.State == MEM_COMMIT && mbi.State != PAGE_NOACCESS)
         {
             u8* buffer = (u8*)malloc(mbi.RegionSize);
+
             if (buffer == NULL)
+            {
                 return NULL;
+            }
 
             size_t bytesRead = 0;
 
@@ -118,7 +121,6 @@ u8* ScanMemory(HANDLE processHandle, u8* pattern, u32 patternSize)
                         return (address + i);
                     }
                 }
-
             }
 
             free(buffer);

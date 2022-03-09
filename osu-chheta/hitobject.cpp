@@ -1,6 +1,6 @@
 #include "hitobject.hpp"
 
-HitObject createHitObject(std::string parse)
+HitObject* createHitObject(std::string parse)
 {
     auto vec = parseHitObject(parse);
 
@@ -12,12 +12,12 @@ HitObject createHitObject(std::string parse)
     
     if (type & 0b1000)
     {
-        return *new SpinnerHitObject(x, y, time, std::stoi(vec[5]) - time);
+        return new SpinnerHitObject(x, y, time, std::stoi(vec[5]) - time);
     } else if(type & 0b0010)
     {
-        return *new SliderHitObject(x, y, time, std::stoi(vec[6]), std::stoi(vec[7]));
+        return new SliderHitObject(x, y, time, std::stoi(vec[6]), std::stod(vec[7]));
     } else
     {
-        return *new CircleHitObject(x, y, time);
+        return new CircleHitObject(x, y, time);
     }
 }

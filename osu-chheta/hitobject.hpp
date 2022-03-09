@@ -116,4 +116,4 @@ class SpinnerHitObject : public HitObject
         }
 };
 
-HitObject createHitObject(std::string parse);
+HitObject* createHitObject(std::string parse);

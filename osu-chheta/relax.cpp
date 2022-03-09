@@ -52,7 +52,7 @@ void startRelax(Beatmap map, HANDLE process)
 
     u8* timeAddress = (u8*)(*(u32*)buffer);
 
-    while (!GetAsyncKeyState(VK_RETURN)) 
+    while (!GetAsyncKeyState(VK_RETURN))
     {
         Sleep(100);
     }
@@ -60,21 +60,25 @@ void startRelax(Beatmap map, HANDLE process)
     while (action != actions.end())
     {
         ReadProcessMemory(process, timeAddress, buffer, sizeof(u32), &bytesRead);
-
         u32 currentTime = *(u32*)buffer;
 
-        if (currentTime < end.getTime())
+        if (currentTime >= action->getTime())
         {
-            if (currentTime >= action->getTime())
+            INPUT input = action->getInput();
+
+            if (GetKeyState(action->getKey()) & 0x8000 && action->isPressed())
             {
-                INPUT input = action->getInput();
+                INPUT releaseInput;
 
-                SendInput(1, &input, sizeof(INPUT));
-
-                printf("%i", action->getDuration());
-
-                action++;
+                releaseInput.type = INPUT_KEYBOARD;
+                releaseInput.ki.wVk = VkKeyScan(action->getKey());
+                releaseInput.ki.dwFlags = KEYEVENTF_KEYUP;
             }
+
+            SendInput(1, &input, sizeof(INPUT));
+
+            action++;
         }
+
     }
 }

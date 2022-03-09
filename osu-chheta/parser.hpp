@@ -28,8 +28,8 @@ class Action
 
     public:
         Action();
-        Action(HitObject* hitObject, char key, bool pressed);
-        Action(double sliderMultiplier, double beatLength, TimingPoint* timingPoint, HitObject* hitObject, char key, bool pressed);
+        Action(HitObject* hitObject, char key, bool pressed, int offset);
+        Action(double sliderMultiplier, double beatLength, TimingPoint* timingPoint, HitObject* hitObject, char key, bool pressed, int offset);
 
         int getTime()
         {

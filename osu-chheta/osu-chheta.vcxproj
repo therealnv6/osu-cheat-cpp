@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="hitobject.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="offset.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="relax.cpp" />
@@ -33,6 +34,7 @@
     <ClInclude Include="global.h" />
     <ClInclude Include="hitobject.hpp" />
     <ClInclude Include="mods.h" />
+    <ClInclude Include="offset.h" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="player.h" />
     <ClInclude Include="scanner.hpp" />

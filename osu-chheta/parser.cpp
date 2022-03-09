@@ -1,6 +1,7 @@
 #include "parser.hpp"
 #include "hitobject.hpp"
 #include "beatmap.h"
+#include "offset.h"
 
 Action::Action()
 {
@@ -12,7 +13,7 @@ Action::Action()
     this->pressed = false;
 }
 
-Action::Action(HitObject* hitObject, char key, bool pressed)
+Action::Action(HitObject* hitObject, char key, bool pressed, int offset)
 {
     this->time = hitObject->getTime();
     this->duration = -1;
@@ -26,7 +27,7 @@ Action::Action(HitObject* hitObject, char key, bool pressed)
     {
         if (hitObject->getType() == HitObjectType::Circle)
         {
-            this->time += 4;
+            this->time += offset;
         } else
         {
             this->time += this->duration;
@@ -37,15 +38,12 @@ Action::Action(HitObject* hitObject, char key, bool pressed)
     this->setInput(pressed);
 }
 
-Action::Action(double sliderMultiplier, double beatLength, TimingPoint* timingPoint, HitObject* hitObject, char key, bool pressed)
+Action::Action(double sliderMultiplier, double beatLength, TimingPoint* timingPoint, HitObject* hitObject, char key, bool pressed, int offset)
 {
-    printf("%i, %i\n", this->duration, beatLength);
-
-    SliderHitObject* sliderObject = (SliderHitObject*) hitObject;
+    SliderHitObject* sliderObject = dynamic_cast<SliderHitObject*>(hitObject);
 
     this->time = hitObject->getTime();
     this->duration = (sliderObject->getSliderLength() / (sliderMultiplier * 100) * (beatLength * (timingPoint->isInherited() ? 1.0 : std::abs(timingPoint->getBeatLength()) / 100))) * sliderObject->getSlides();
-
 
     if (!pressed)
     {
@@ -101,20 +99,18 @@ std::map<std::string, funcPtr> beatmapInitializers = {
     { "SliderMultiplier:", &Beatmap::setSliderMultiplier },
 };
 
-double getCorrectBeatLength(std::vector<TimingPoint>* timingPoints, TimingPoint* currentTimingPoint, std::vector<HitObject> hitObjects)
+double getCorrectBeatLength(std::vector<TimingPoint>* timingPoints, std::vector<TimingPoint>::iterator currentTimingPoint, std::vector<HitObject*> hitObjects)
 {
     double beatLength = currentTimingPoint->getBeatLength();
 
-    for (auto point : *timingPoints)
+    while (currentTimingPoint != timingPoints->end() - 1 && currentTimingPoint->getTime() != hitObjects[0]->getTime())
     {
-        std::cout << point.getBeatLength() << std::endl;
+        currentTimingPoint++;
 
-        if (hitObjects[0].getTime() == currentTimingPoint->getTime())
+        if (currentTimingPoint->isInherited())
         {
-            break;
+            beatLength = currentTimingPoint->getBeatLength();
         }
-
-        currentTimingPoint = &point;
     }
 
     return beatLength;
@@ -132,13 +128,12 @@ Beatmap parseMap(std::string path)
         return *beatmap;
     }
 
-    std::vector<HitObject> hitObjects;
+    std::vector<HitObject*> hitObjects;
     std::vector<TimingPoint> timingPoints;
 
     std::string line;
 
     int section = -1;
-    double sliderMultiplier = 0;
 
     std::cout << "[parsing] parsing contents of" + path + "osu! beatmap" << std::endl;
 
@@ -191,16 +186,14 @@ Beatmap parseMap(std::string path)
         }
     }
 
-    TimingPoint* currentTimingPoint = &*timingPoints.begin();
-
-    std::cout << currentTimingPoint->getBeatLength() << std::endl;
+    auto currentTimingPoint = timingPoints.begin();
 
     double beatLength = timingPoints.begin()->getBeatLength();
     char key = PRIMARY_KEY;
 
     int lastTime = 0;
 
-    printf("[actions] creating actions from HitObjects");
+    printf("[actions] creating actions from HitObjects\n");
 
     for (auto object : hitObjects)
     {
@@ -211,17 +204,21 @@ Beatmap parseMap(std::string path)
             beatLength = currentTimingPoint->getBeatLength();
         }
 
-        if (object.getType() == HitObjectType::Circle || object.getType() == HitObjectType::Spinner)
+        int offset = calculateOffset(object, hitObjects, *beatmap);
+        std::cout << offset << std::endl;
+
+        if (object->getType() == HitObjectType::Circle || object->getType() == HitObjectType::Spinner)
         {
-            actions.push_back(Action(&object, key, true));
-            actions.push_back(Action(&object, key, false));
-        } else if (object.getType() == HitObjectType::Slider)
+            actions.push_back(Action(object, key, true, offset));
+            actions.push_back(Action(object, key, false, offset));
+        }
+        else if (object->getType() == HitObjectType::Slider)
         {
-            actions.push_back(Action(sliderMultiplier, beatLength, currentTimingPoint, &object, key, true));
-            actions.push_back(Action(sliderMultiplier, beatLength, currentTimingPoint, &object, key, false));
+            actions.push_back(Action(beatmap->getSliderMultiplier(), beatLength, &*currentTimingPoint, object, key, true, offset));
+            actions.push_back(Action(beatmap->getSliderMultiplier(), beatLength, &*currentTimingPoint, object, key, false, offset));
         }
 
-        if (lastTime - object.getTime() <= 70 || object.getType() == HitObjectType::Slider)
+        if (object->getTime() - lastTime <= 10 || object->getType() == HitObjectType::Slider)
         {
             if (key == PRIMARY_KEY)
             {
@@ -237,7 +234,7 @@ Beatmap parseMap(std::string path)
             key = PRIMARY_KEY;
         }
 
-        lastTime = object.getTime();
+        lastTime = object->getTime();
     }
 
     beatmap->setActions(actions);
